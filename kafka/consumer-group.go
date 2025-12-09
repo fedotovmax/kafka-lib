@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/IBM/sarama"
 )
+
+var ErrConsumerHandlerClosedByCtx = errors.New("handler closed by context")
 
 type consumerGroup struct {
 	consumer  sarama.ConsumerGroup
@@ -122,7 +125,7 @@ func (cg *consumerGroup) Start() {
 
 func (cg *consumerGroup) Stop(ctx context.Context) error {
 
-	const op = "queues.kafka.consumer-group.Close"
+	const op = "queues.kafka.consumer-group.Stop"
 
 	done := make(chan error, 1)
 
@@ -137,6 +140,11 @@ func (cg *consumerGroup) Stop(ctx context.Context) error {
 	select {
 	case err := <-done:
 		if err != nil {
+
+			if errors.Is(err, ErrConsumerHandlerClosedByCtx) {
+				return nil
+			}
+
 			return fmt.Errorf("%s: %w", op, err)
 		}
 		return nil
