@@ -15,7 +15,6 @@ go get -u github.com/fedotovmax/outbox@{version}
 ```go
 
 // logger — ваш slog.Logger
-// producer — ваш Kafka Producer
 
 type Producer interface {
 	GetInput() chan<- *sarama.ProducerMessage
@@ -24,21 +23,29 @@ type Producer interface {
 }
 
 
-// txManager — pgxtx.Manager
-// extractor — pgxtx.Extractor
+
+type OutboxAdapter interface {
+	ConfirmFailed(ctx context.Context, ev *FailedEvent) error
+	ConfirmEvent(ctx context.Context, ev *SuccessEvent) error
+	ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]*Event, error)
+}
+
+
+
 
 // config — outbox.Config
 
-ob := outbox.New(logger, producer, txManager, extractor, config)
+ob := outbox.New(logger, producer, adapter, config)
 ```
 
 ## Конструктор `New`
 
-| Параметр | Тип            | Описание                               |
-| -------- | -------------- | -------------------------------------- |
-| `l`      | `*slog.Logger` | Логгер для вывода событий и ошибок     |
-| `p`      | `Producer`     | Адаптер для публикации событий в Kafka |
-| `cfg`    | `Config`       | Конфигурация Outbox                    |
+| Параметр | Тип            | Описание                                  |
+| -------- | -------------- | ----------------------------------------- |
+| `l`      | `*slog.Logger` | Логгер для вывода событий и ошибок        |
+| `p`      | `Producer`     | Адаптер для публикации событий в Kafka    |
+| `ad`     | `Adapter`      | Адаптер для для работы с вашем хранилищем |
+| `cfg`    | `Config`       | Конфигурация Outbox                       |
 
 ## Методы
 

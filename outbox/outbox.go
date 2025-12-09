@@ -13,8 +13,6 @@ import (
 )
 
 type OutboxAdapter interface {
-	AddNewEvent(ctx context.Context, ev CreateEvent) (string, error)
-	Find(ctx context.Context, f FindEventsFilters) ([]*Event, error)
 	ConfirmFailed(ctx context.Context, ev *FailedEvent) error
 	ConfirmEvent(ctx context.Context, ev *SuccessEvent) error
 	ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]*Event, error)
@@ -34,7 +32,7 @@ type Outbox struct {
 // Limit = 50, ProcessTimeout = 360ms -> For kafka flush: MaxMessages = 12-25, Frequency = 90-180ms;
 // Limit = 200, ProcessTimeout = 530ms -> For kafka flush: MaxMessages = 50-100, Frequency = 130-265ms;
 // Limit = 500, ProcessTimeout = 720ms -> For kafka flush: MaxMessages = 125-250, Frequency = 180-360ms;
-func New(l *slog.Logger, p kafka.Producer, adapter OutboxAdapter, cfg Config) (*Outbox, error) {
+func New(l *slog.Logger, p kafka.Producer, ad OutboxAdapter, cfg Config) (*Outbox, error) {
 
 	err := validateConfig(&cfg)
 
@@ -49,7 +47,7 @@ func New(l *slog.Logger, p kafka.Producer, adapter OutboxAdapter, cfg Config) (*
 	return &Outbox{
 		kafka:     kafka,
 		log:       l,
-		adapter:   adapter,
+		adapter:   ad,
 		cfg:       cfg,
 		ctx:       ctx,
 		stop:      cancel,
