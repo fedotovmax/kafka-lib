@@ -22,6 +22,11 @@ type Config struct {
 
 	// Timeout for processing method, min = 200 ms
 	ProcessTimeout time.Duration
+
+	//Header event_id key
+	HeaderEventID string
+	//Header event_type key
+	HeaderEventType string
 }
 
 var SmallBatchConfig = Config{
@@ -70,6 +75,14 @@ func validateConfig(cfg *Config) error {
 
 	if cfg.ProcessTimeout < minProcessTimeout {
 		errs = append(errs, fmt.Sprintf("processTimeout must be >= %s", minProcessTimeout))
+	}
+
+	if cfg.HeaderEventID == "" {
+		errs = append(errs, "headerEventID required")
+	}
+
+	if cfg.HeaderEventType == "" {
+		errs = append(errs, "headerEventType required")
 	}
 
 	if len(errs) > 0 {

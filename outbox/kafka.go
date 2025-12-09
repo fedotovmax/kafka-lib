@@ -20,38 +20,43 @@ type produceKafka struct {
 	onceSuccess sync.Once
 	onceErrors  sync.Once
 
-	successes chan *SuccessEvent
-	errors    chan *FailedEvent
+	successes chan *successEvent
+	errors    chan *failedEvent
+}
+
+type headers struct {
+	EventType string
+	EventID   string
 }
 
 func newProduceKafka(p Producer) *produceKafka {
 	return &produceKafka{
 		producer:  p,
-		successes: make(chan *SuccessEvent),
-		errors:    make(chan *FailedEvent),
+		successes: make(chan *successEvent),
+		errors:    make(chan *failedEvent),
 	}
 }
 
-func (p *produceKafka) Publish(ctx context.Context, ev *Event) error {
+func (p *produceKafka) Publish(ctx context.Context, h *headers, ev Event) error {
 	const op = "outbox.kafka.Publish"
 
 	metadata := &messageMetadata{
-		ID:   ev.ID,
-		Type: ev.Type,
+		ID:   ev.GetID(),
+		Type: ev.GetType(),
 	}
 
 	msg := &sarama.ProducerMessage{
-		Topic: ev.Topic,
-		Key:   sarama.StringEncoder(ev.AggregateID),
-		Value: sarama.ByteEncoder(ev.Payload),
+		Topic: ev.GetTopic(),
+		Key:   sarama.StringEncoder(ev.GetAggregateID()),
+		Value: sarama.ByteEncoder(ev.GetPayload()),
 		Headers: []sarama.RecordHeader{
 			{
-				Key:   []byte("event_id"),
-				Value: []byte(ev.ID),
+				Key:   []byte(h.EventID),
+				Value: []byte(ev.GetID()),
 			},
 			{
-				Key:   []byte("event_type"),
-				Value: []byte(ev.Type),
+				Key:   []byte(h.EventType),
+				Value: []byte(ev.GetType()),
 			},
 		},
 		Metadata: metadata,
@@ -59,13 +64,13 @@ func (p *produceKafka) Publish(ctx context.Context, ev *Event) error {
 
 	select {
 	case <-ctx.Done():
-		return fmt.Errorf("%s: event_id: %s: %w", op, ev.ID, ctx.Err())
+		return fmt.Errorf("%s: event_id: %s: %w", op, ev.GetID(), ctx.Err())
 	case p.producer.GetInput() <- msg:
 		return nil
 	}
 }
 
-func (p *produceKafka) GetSuccesses(ctx context.Context) <-chan *SuccessEvent {
+func (p *produceKafka) GetSuccesses(ctx context.Context) <-chan *successEvent {
 	p.onceSuccess.Do(func() {
 		go func() {
 			defer close(p.successes)
@@ -84,7 +89,7 @@ func (p *produceKafka) GetSuccesses(ctx context.Context) <-chan *SuccessEvent {
 					select {
 					case <-ctx.Done():
 						return
-					case p.successes <- &SuccessEvent{ID: m.ID, Type: m.Type}:
+					case p.successes <- &successEvent{ID: m.ID, Type: m.Type}:
 					}
 				}
 			}
@@ -94,7 +99,7 @@ func (p *produceKafka) GetSuccesses(ctx context.Context) <-chan *SuccessEvent {
 	return p.successes
 }
 
-func (p *produceKafka) GetErrors(ctx context.Context) <-chan *FailedEvent {
+func (p *produceKafka) GetErrors(ctx context.Context) <-chan *failedEvent {
 
 	const op = "outbox.kafka.GetErrors"
 
@@ -116,7 +121,7 @@ func (p *produceKafka) GetErrors(ctx context.Context) <-chan *FailedEvent {
 					select {
 					case <-ctx.Done():
 						return
-					case p.errors <- &FailedEvent{ID: m.ID, Type: m.Type, Error: fmt.Errorf("%s:%w", op,
+					case p.errors <- &failedEvent{ID: m.ID, Type: m.Type, Error: fmt.Errorf("%s:%w", op,
 						produceErr.Err)}:
 					}
 				}

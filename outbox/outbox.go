@@ -2,7 +2,6 @@ package outbox
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -13,16 +12,16 @@ import (
 )
 
 type OutboxAdapter interface {
-	ConfirmFailed(ctx context.Context, ev *FailedEvent) error
-	ConfirmEvent(ctx context.Context, ev *SuccessEvent) error
-	ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]*Event, error)
+	ConfirmFailed(ctx context.Context, ev FailedEvent) error
+	ConfirmEvent(ctx context.Context, ev SuccessEvent) error
+	ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]Event, error)
 }
 
 type Outbox struct {
 	kafka     *produceKafka
 	adapter   OutboxAdapter
 	log       *slog.Logger
-	cfg       Config
+	cfg       *Config
 	inProcess int32
 	ctx       context.Context
 	stop      context.CancelFunc
@@ -32,9 +31,9 @@ type Outbox struct {
 // Limit = 50, ProcessTimeout = 360ms -> For kafka flush: MaxMessages = 12-25, Frequency = 90-180ms;
 // Limit = 200, ProcessTimeout = 530ms -> For kafka flush: MaxMessages = 50-100, Frequency = 130-265ms;
 // Limit = 500, ProcessTimeout = 720ms -> For kafka flush: MaxMessages = 125-250, Frequency = 180-360ms;
-func New(l *slog.Logger, p kafka.Producer, ad OutboxAdapter, cfg Config) (*Outbox, error) {
+func New(l *slog.Logger, p kafka.Producer, ad OutboxAdapter, cfg *Config) (*Outbox, error) {
 
-	err := validateConfig(&cfg)
+	err := validateConfig(cfg)
 
 	if err != nil {
 		return nil, err
@@ -148,7 +147,7 @@ func (a *Outbox) errorsMonitoring(wg *sync.WaitGroup) {
 	}()
 }
 
-func (a *Outbox) fail(ev *FailedEvent) error {
+func (a *Outbox) fail(ev *failedEvent) error {
 	const op = "outbox.app.fail"
 
 	queriesCtx, cancelQueriesCtx := context.WithTimeout(a.ctx, a.cfg.ProcessTimeout)
@@ -163,7 +162,7 @@ func (a *Outbox) fail(ev *FailedEvent) error {
 	return nil
 }
 
-func (a *Outbox) confirm(ev *SuccessEvent) error {
+func (a *Outbox) confirm(ev SuccessEvent) error {
 
 	const op = "outbox.app.confirm"
 
@@ -218,19 +217,25 @@ func (a *Outbox) process() {
 	events, err := a.adapter.ReserveNewEvents(queriesCtx, a.cfg.Limit, a.cfg.ReserveDuration)
 
 	if err != nil {
-		if errors.Is(err, ErrNoNewEvents) {
-			log.Info("skip processing, no new events")
-			return
-		}
 		log.Error("error when processing", slog.String("error", err.Error()))
+		return
+	}
+
+	if len(events) == 0 {
+		log.Info("skip processing, no new events")
 		return
 	}
 
 	publishCtx, cancelPublishCtx := context.WithTimeout(a.ctx, a.cfg.ProcessTimeout)
 	defer cancelPublishCtx()
 
+	h := &headers{
+		EventType: a.cfg.HeaderEventType,
+		EventID:   a.cfg.HeaderEventID,
+	}
+
 	for _, event := range events {
-		err := a.kafka.Publish(publishCtx, event)
+		err := a.kafka.Publish(publishCtx, h, event)
 		if err != nil {
 			log.Error("publish error", slog.String("error", err.Error()))
 		}
