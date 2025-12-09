@@ -12,7 +12,7 @@ import (
 )
 
 type OutboxAdapter interface {
-	ConfirmFailed(ctx context.Context, ev FailedEvent) error
+	ConfirmFailedEvent(ctx context.Context, ev FailedEvent) error
 	ConfirmEvent(ctx context.Context, ev SuccessEvent) error
 	ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]Event, error)
 }
@@ -153,7 +153,7 @@ func (a *Outbox) fail(ev *failedEvent) error {
 	queriesCtx, cancelQueriesCtx := context.WithTimeout(a.ctx, a.cfg.ProcessTimeout)
 	defer cancelQueriesCtx()
 
-	err := a.adapter.ConfirmFailed(queriesCtx, ev)
+	err := a.adapter.ConfirmFailedEvent(queriesCtx, ev)
 
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
