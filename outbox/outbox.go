@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/fedotovmax/kafkalib/kafka"
+	"github.com/fedotovmax/kafka-lib/kafka"
 )
 
 type OutboxAdapter interface {

@@ -1,4 +1,4 @@
-module github.com/fedotovmax/kafkalib
+module github.com/fedotovmax/kafka-lib
 
 go 1.25.4
 
