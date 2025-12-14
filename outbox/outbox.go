@@ -222,7 +222,7 @@ func (a *Outbox) process() {
 	}
 
 	if len(events) == 0 {
-		log.Info("skip processing, no new events")
+		log.Debug("skip processing, no new events")
 		return
 	}
 
