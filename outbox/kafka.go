@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/IBM/sarama"
+	"github.com/fedotovmax/kafka-lib/kafka"
 )
 
 type Producer interface {
@@ -23,9 +24,6 @@ type produceKafka struct {
 	successes chan *successEvent
 	errors    chan *failedEvent
 }
-
-const HeaderEventID = "event_id"
-const HeaderEventType = "event_type"
 
 func newProduceKafka(p Producer) *produceKafka {
 	return &produceKafka{
@@ -49,11 +47,11 @@ func (p *produceKafka) Publish(ctx context.Context, ev Event) error {
 		Value: sarama.ByteEncoder(ev.GetPayload()),
 		Headers: []sarama.RecordHeader{
 			{
-				Key:   []byte(HeaderEventID),
+				Key:   []byte(kafka.HeaderEventID),
 				Value: []byte(ev.GetID()),
 			},
 			{
-				Key:   []byte(HeaderEventType),
+				Key:   []byte(kafka.HeaderEventType),
 				Value: []byte(ev.GetType()),
 			},
 		},
