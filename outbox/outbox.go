@@ -229,13 +229,8 @@ func (a *Outbox) process() {
 	publishCtx, cancelPublishCtx := context.WithTimeout(a.ctx, a.cfg.ProcessTimeout)
 	defer cancelPublishCtx()
 
-	h := &headers{
-		EventType: a.cfg.HeaderEventType,
-		EventID:   a.cfg.HeaderEventID,
-	}
-
 	for _, event := range events {
-		err := a.kafka.Publish(publishCtx, h, event)
+		err := a.kafka.Publish(publishCtx, event)
 		if err != nil {
 			log.Error("publish error", slog.String("error", err.Error()))
 		}

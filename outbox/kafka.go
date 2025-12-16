@@ -24,10 +24,8 @@ type produceKafka struct {
 	errors    chan *failedEvent
 }
 
-type headers struct {
-	EventType string
-	EventID   string
-}
+const HeaderEventID = "event_id"
+const HeaderEventType = "event_type"
 
 func newProduceKafka(p Producer) *produceKafka {
 	return &produceKafka{
@@ -37,7 +35,7 @@ func newProduceKafka(p Producer) *produceKafka {
 	}
 }
 
-func (p *produceKafka) Publish(ctx context.Context, h *headers, ev Event) error {
+func (p *produceKafka) Publish(ctx context.Context, ev Event) error {
 	const op = "outbox.kafka.Publish"
 
 	metadata := &messageMetadata{
@@ -51,11 +49,11 @@ func (p *produceKafka) Publish(ctx context.Context, h *headers, ev Event) error 
 		Value: sarama.ByteEncoder(ev.GetPayload()),
 		Headers: []sarama.RecordHeader{
 			{
-				Key:   []byte(h.EventID),
+				Key:   []byte(HeaderEventID),
 				Value: []byte(ev.GetID()),
 			},
 			{
-				Key:   []byte(h.EventType),
+				Key:   []byte(HeaderEventType),
 				Value: []byte(ev.GetType()),
 			},
 		},
