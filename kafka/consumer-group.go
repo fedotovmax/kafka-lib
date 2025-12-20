@@ -37,6 +37,7 @@ func NewConsumerGroup(cgcfg *ConsumerGroupConfig, log *slog.Logger, handler sara
 	cfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	cfg.Consumer.IsolationLevel = sarama.ReadUncommitted
 	cfg.Consumer.Return.Errors = true
+	cfg.Consumer.Offsets.AutoCommit.Enable = cgcfg.AutoCommit
 
 	cg, err := sarama.NewConsumerGroup(cgcfg.Brokers, cgcfg.GroupID, cfg)
 

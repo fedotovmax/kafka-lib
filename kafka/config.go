@@ -11,6 +11,7 @@ type ProducerConfig struct {
 type ConsumerGroupConfig struct {
 	Brokers             []string
 	Topics              []string
-	GroupID             string
 	SleepAfterRebalance time.Duration
+	GroupID             string
+	AutoCommit          bool
 }
