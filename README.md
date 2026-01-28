@@ -1,4 +1,4 @@
-go get github.com/fedotovmax/kafka-lib@v1.0.14
+go get github.com/fedotovmax/kafka-lib@v1.0.15
 # 1. Для корректного использования в проекте нужно добавить в миграцию следующую таблицу:
 
 ```sql
