@@ -2,6 +2,7 @@ package outbox
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type successEvent struct {
@@ -51,11 +52,11 @@ type SuccessEvent interface {
 	GetType() string
 }
 
-// type EventStatus string
+type EventStatus string
 
-// func (es EventStatus) String() string {
-// 	return string(es)
-// }
+func (es EventStatus) String() string {
+	return string(es)
+}
 
 type Event interface {
 	GetID() string
@@ -65,16 +66,16 @@ type Event interface {
 	GetPayload() json.RawMessage
 }
 
-// const EventStatusNew EventStatus = "new"
-// const EventStatusDone EventStatus = "done"
+const EventStatusNew EventStatus = "new"
+const EventStatusDone EventStatus = "done"
 
-// type Event struct {
-// 	ID          string
-// 	AggregateID string
-// 	Topic       string
-// 	Type        string
-// 	Payload     json.RawMessage
-// 	Status      EventStatus
-// 	CreatedAt   time.Time
-// 	ReservedTo  *time.Time
-// }
+type EventModel struct {
+	ID          string
+	AggregateID string
+	Topic       string
+	Type        string
+	Payload     json.RawMessage
+	Status      EventStatus
+	CreatedAt   time.Time
+	ReservedTo  *time.Time
+}
