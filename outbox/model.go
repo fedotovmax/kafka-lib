@@ -58,6 +58,9 @@ func (es EventStatus) String() string {
 	return string(es)
 }
 
+const EventStatusNew EventStatus = "new"
+const EventStatusDone EventStatus = "done"
+
 type Event interface {
 	GetID() string
 	GetAggregateID() string
@@ -65,9 +68,6 @@ type Event interface {
 	GetType() string
 	GetPayload() json.RawMessage
 }
-
-const EventStatusNew EventStatus = "new"
-const EventStatusDone EventStatus = "done"
 
 type EventModel struct {
 	ID          string

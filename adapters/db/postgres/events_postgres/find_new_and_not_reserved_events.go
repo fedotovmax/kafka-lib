@@ -11,7 +11,7 @@ import (
 
 const findNewAndNotReservedEventsQuery = `select id, aggregate_id, event_topic, event_type,
 	payload, status, created_at, reserved_to
-	from events where status != $1 AND
+	from events where status = $1 AND
 	(reserved_to IS NULL OR reserved_to < $2)
 	order by created_at asc
 	limit $3;`
@@ -22,7 +22,7 @@ func (p *postgres) FindNewAndNotReservedEvents(ctx context.Context, limit int) (
 
 	tx := p.ex.ExtractTx(ctx)
 
-	rows, err := tx.Query(ctx, findNewAndNotReservedEventsQuery, outbox.EventStatusDone, time.Now().UTC(), limit)
+	rows, err := tx.Query(ctx, findNewAndNotReservedEventsQuery, outbox.EventStatusNew, time.Now().UTC(), limit)
 
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w: %v", op, adapters.ErrInternal, err)
