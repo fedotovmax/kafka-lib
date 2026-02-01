@@ -1,4 +1,4 @@
-go get github.com/fedotovmax/kafka-lib@v1.0.16
+go get github.com/fedotovmax/kafka-lib@v1.0.17
 # 1. Для корректного использования в проекте нужно добавить в миграцию следующую таблицу:
 
 ```sql
@@ -12,6 +12,13 @@ create table if not exists events (
   created_at timestamp not null,
   reserved_to timestamp default null
 );
+
+
+create index concurrently idx_events_new_unreserved_created_at
+on events (created_at)
+where status = 'new'
+and reserved_to is null;
+
 ```
 
 ## Далее создать все сущности:
