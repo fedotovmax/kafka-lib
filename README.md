@@ -1,4 +1,4 @@
-go get github.com/fedotovmax/kafka-lib@v1.0.17
+go get github.com/fedotovmax/kafka-lib@v1.0.18
 # 1. Для корректного использования в проекте нужно добавить в миграцию следующую таблицу:
 
 ```sql
@@ -25,7 +25,7 @@ and reserved_to is null;
 
 ### пакет adapters/db/postgres/- создать адаптер для postgresql
 
-### пакет event_sender - создать отправителя событий. Требует storage (adapter postgres)
+### пакет outbox_sender - создать отправителя событий. Требует storage (adapter postgres)
 
 ### пакет kafka создать producer и consumer (по требованию)
 
@@ -34,7 +34,7 @@ and reserved_to is null;
 # 2. Или сделать свою реализацию, но требуется реализовать интерфейсы:
 
 ```go
-type OutboxAdapter interface {
+type Adapter interface {
 ConfirmFailedEvent(ctx context.Context, ev FailedEvent) error
 ConfirmEvent(ctx context.Context, ev SuccessEvent) error
 ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]Event, error)

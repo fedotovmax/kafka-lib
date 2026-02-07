@@ -1,4 +1,4 @@
-package eventsender
+package outboxsender
 
 import (
 	"context"

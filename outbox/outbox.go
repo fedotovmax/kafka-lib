@@ -11,7 +11,11 @@ import (
 	"github.com/fedotovmax/kafka-lib/kafka"
 )
 
-type OutboxAdapter interface {
+type Sender interface {
+	CreateEvent(ctx context.Context, d *CreateEvent) (string, error)
+}
+
+type Adapter interface {
 	ConfirmFailedEvent(ctx context.Context, ev FailedEvent) error
 	ConfirmEvent(ctx context.Context, ev SuccessEvent) error
 	ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]Event, error)
@@ -19,7 +23,7 @@ type OutboxAdapter interface {
 
 type Outbox struct {
 	kafka     *produceKafka
-	adapter   OutboxAdapter
+	adapter   Adapter
 	log       *slog.Logger
 	cfg       *Config
 	inProcess int32
@@ -31,7 +35,7 @@ type Outbox struct {
 // Limit = 50, ProcessTimeout = 360ms -> For kafka flush: MaxMessages = 12-25, Frequency = 90-180ms;
 // Limit = 200, ProcessTimeout = 530ms -> For kafka flush: MaxMessages = 50-100, Frequency = 130-265ms;
 // Limit = 500, ProcessTimeout = 720ms -> For kafka flush: MaxMessages = 125-250, Frequency = 180-360ms;
-func New(l *slog.Logger, p kafka.Producer, ad OutboxAdapter, cfg *Config) (*Outbox, error) {
+func New(l *slog.Logger, p kafka.Producer, ad Adapter, cfg *Config) (*Outbox, error) {
 
 	err := validateConfig(cfg)
 
