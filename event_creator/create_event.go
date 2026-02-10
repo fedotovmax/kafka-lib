@@ -1,4 +1,4 @@
-package outboxsender
+package eventcreator
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"github.com/fedotovmax/kafka-lib/outbox"
 )
 
-func (u *eventsender) CreateEvent(ctx context.Context, d *outbox.CreateEvent) (string, error) {
-	const op = "usecase.events.ConfirmFailedEvent"
+func (u *creator) CreateEvent(ctx context.Context, d *outbox.CreateEvent) (string, error) {
+	const op = "event_creator.ConfirmFailedEvent"
 
 	res, err := u.storage.CreateEvent(ctx, d)
 

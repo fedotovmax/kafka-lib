@@ -41,17 +41,6 @@ type messageMetadata struct {
 	Type string
 }
 
-type FailedEvent interface {
-	GetID() string
-	GetType() string
-	GetError() error
-}
-
-type SuccessEvent interface {
-	GetID() string
-	GetType() string
-}
-
 type EventStatus string
 
 func (es EventStatus) String() string {
@@ -60,14 +49,6 @@ func (es EventStatus) String() string {
 
 const EventStatusNew EventStatus = "new"
 const EventStatusDone EventStatus = "done"
-
-type Event interface {
-	GetID() string
-	GetAggregateID() string
-	GetTopic() string
-	GetType() string
-	GetPayload() json.RawMessage
-}
 
 type EventModel struct {
 	ID          string

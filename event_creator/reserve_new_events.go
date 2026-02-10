@@ -1,4 +1,4 @@
-package outboxsender
+package eventcreator
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 	"github.com/fedotovmax/kafka-lib/outbox"
 )
 
-func (u *eventsender) ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]outbox.Event, error) {
+func (u *creator) ReserveNewEvents(ctx context.Context, limit int, reserveDuration time.Duration) ([]outbox.Event, error) {
 
-	const op = "usecase.events.ReserveNewEvents"
+	const op = "event_creator.ReserveNewEvents"
 
 	var events []*outbox.EventModel
 

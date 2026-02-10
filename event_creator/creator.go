@@ -1,4 +1,4 @@
-package outboxsender
+package eventcreator
 
 import (
 	"context"
@@ -16,11 +16,11 @@ type Storage interface {
 	FindNewAndNotReservedEvents(ctx context.Context, limit int) ([]*outbox.EventModel, error)
 }
 
-type eventsender struct {
+type creator struct {
 	storage Storage
 	txm     pgxtx.Manager
 }
 
-func New(storage Storage, txm pgxtx.Manager) *eventsender {
-	return &eventsender{storage: storage, txm: txm}
+func New(storage Storage, txm pgxtx.Manager) *creator {
+	return &creator{storage: storage, txm: txm}
 }

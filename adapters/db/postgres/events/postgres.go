@@ -1,4 +1,4 @@
-package eventspostgres
+package events
 
 import (
 	"log/slog"
